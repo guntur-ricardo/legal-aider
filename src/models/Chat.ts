@@ -4,6 +4,7 @@ export interface Chat {
     context: ChatContext;
     messages: ChatMessage[];
     metadata: ChatMetadata;
+    timeSavings?: TimeSavings;
 }
 
 export interface ChatContext {
@@ -21,6 +22,17 @@ export interface ChatMessage {
 
 export interface ChatMetadata {
     createdAt: string;
-    estimatedDuration: number;
+    chatDuration: number;  // Time spent in AI consultation (minutes)
     complexity: 'low' | 'medium' | 'high';
+}
+
+export interface TimeSavings {
+    traditionalDuration: number;  // Estimated time for traditional methods (minutes)
+    timeSaved: number;           // traditionalDuration - chatDuration (minutes)
+    factors: {
+        legalResearch: number;   // Estimated time for legal research
+        documentReview: number;  // Estimated time for document review
+        preparation: number;     // Estimated time for preparation
+        followUp: number;        // Estimated time for follow-up communication
+    };
 } 

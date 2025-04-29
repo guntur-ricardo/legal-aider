@@ -54,7 +54,7 @@ export class ChatGenerator {
         const frameworks = config.legalFrameworks[this.focus];
         const expertiseConfig = config.expertiseLevels[context.expertiseLevel as keyof typeof config.expertiseLevels];
 
-        return `You are a legal AI assistant specializing in ${this.focus}. 
+        return `You are a legal AI assistant specializing in ${this.focus} with expertise in ${context.jurisdiction} law.
         The user is a ${context.expertiseLevel} level ${context.userRole}.
         Consider the following legal frameworks in your responses: ${frameworks.join(', ')}.
         
@@ -63,7 +63,8 @@ export class ChatGenerator {
         - Terminology level: ${expertiseConfig.terminologyLevel}
         - Citation frequency: ${expertiseConfig.citationFrequency}
         
-        Generate a realistic legal consultation conversation.`;
+        When discussing legal concepts, focus on ${context.jurisdiction} law and regulations.
+        Generate a realistic legal consultation conversation that matches the user's role and expertise level.`;
     }
 
     private async generateUserMessage(context: ChatContext): Promise<string> {
@@ -73,13 +74,15 @@ export class ChatGenerator {
         );
 
         const prompt = `Generate a realistic legal question or scenario for a ${context.expertiseLevel} level 
-        ${context.userRole} about ${this.focus}. The question should be significantly different from these existing questions:
+        ${context.userRole} about ${this.focus} in ${context.jurisdiction}. The question should be significantly different from these existing questions:
         ${existingQuestions.join('\n')}
         
         Make sure the new question:
-        1. Covers a different aspect of ${this.focus}
-        2. Has a different context or scenario
-        3. Addresses different legal considerations`;
+        1. Is appropriate for a ${context.expertiseLevel} level ${context.userRole}
+        2. Covers a different aspect of ${this.focus}
+        3. Has a different context or scenario
+        4. Addresses different legal considerations
+        5. Is relevant to ${context.jurisdiction} law`;
 
         const response = await this.model.invoke(prompt);
         return response.content.toString();
@@ -152,8 +155,18 @@ export class ChatGenerator {
             messages,
             metadata: {
                 createdAt: now,
-                estimatedDuration: 15, // Default 15 minutes
+                chatDuration: 15, // Default 15 minutes for AI consultation
                 complexity: 'medium'
+            },
+            timeSavings: {
+                traditionalDuration: 60, // Default 1 hour for traditional methods
+                timeSaved: 45,          // Default 45 minutes saved
+                factors: {
+                    legalResearch: 30,
+                    documentReview: 15,
+                    preparation: 10,
+                    followUp: 5
+                }
             }
         };
     }
