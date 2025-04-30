@@ -23,6 +23,8 @@ interface ChatUpdate {
     metadata: {
         chatDuration: number;
         complexity: 'low' | 'medium' | 'high';
+        topics: string[];
+        faqs: string[];
     };
     timeSavings: {
         traditionalDuration: number;
@@ -42,9 +44,9 @@ export class ChatAnalyzer {
     private readonly COMPREHENSION_MULTIPLIER = 1.5;
     private readonly RESPONSE_FORMULATION = 2;
 
-    constructor() {
+    constructor() {    
         this.model = new ChatOpenAI({
-            modelName: config.defaultModel,
+            modelName: config.defaultModel,            
             // temperature: 0.3, // Lower temperature for more focused analysis
         });
     }
@@ -160,18 +162,18 @@ export class ChatAnalyzer {
 
     async analyzeForUpdate(chat: Chat): Promise<ChatUpdate> {
         const analysis = await this.analyze(chat);
-        
+        const chatDuration = this.calculateChatDuration(chat.messages);
+        const timeSavings = this.calculateTimeSavings(chat, analysis.topics, analysis.faqs);
+
         return {
             id: chat.id,
             metadata: {
-                chatDuration: analysis.timeSavings.chatDuration,
-                complexity: chat.metadata.complexity
+                chatDuration,
+                complexity: chat.metadata.complexity,
+                topics: analysis.topics,
+                faqs: analysis.faqs
             },
-            timeSavings: {
-                traditionalDuration: analysis.timeSavings.traditionalDuration,
-                timeSaved: analysis.timeSavings.timeSaved,
-                factors: analysis.timeSavings.factors
-            }
+            timeSavings
         };
     }
 } 

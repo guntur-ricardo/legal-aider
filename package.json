@@ -13,7 +13,7 @@
     "format:check": "prettier --check \"src/**/*.ts\"",
     "generate-chat": "ts-node src/scripts/generateChat.ts",
     "archive-chats": "ts-node src/scripts/archiveChats.ts",
-    "analyze-chats": "ts-node src/scripts/analyzeChats.ts"
+    "analyze-chats": "ts-node src/scripts/analyzeAndUpdateChats.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
@@ -29,6 +29,7 @@
     "@types/jest": "^29.0.0",
     "@types/node": "^22.15.0",
     "@types/uuid": "^9.0.8",
+    "@types/yargs": "^17.0.33",
     "@typescript-eslint/eslint-plugin": "^7.0.0",
     "@typescript-eslint/parser": "^7.0.0",
     "eslint": "^8.56.0",
@@ -38,6 +39,7 @@
     "prettier": "^3.2.5",
     "ts-jest": "^29.0.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.5.4"
+    "typescript": "^5.5.4",
+    "yargs": "^17.7.2"
   }
 }

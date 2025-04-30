@@ -24,6 +24,8 @@ export interface ChatMetadata {
     createdAt: string;
     chatDuration: number;  // Time spent in AI consultation (minutes)
     complexity: 'low' | 'medium' | 'high';
+    topics: string[];      // Legal topics discussed in the chat
+    faqs: string[];        // Frequently asked questions from the chat
 }
 
 export interface TimeSavings {

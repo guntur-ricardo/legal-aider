@@ -13,38 +13,32 @@ Legal Aider is a comprehensive tool that helps legal teams by:
 
 ### Phase 1: Synthetic Chat Generation (Current)
 - **Core Components**
-  - `ChatGenerator`: Handles synthetic chat generation using LangChain
-  - `LegalFocusManager`: Manages different legal focus areas (commercial contracts, privacy)
+  - `ChatGenerator`: Handles synthetic chat generation using LangChain and is configurable via role, expertise and jurisdiction.
   - `ChatStorage`: Handles storage of generated chats (local storage for now)
 - **Configuration**
   - AI model configuration (GPT/Claude)
   - Legal focus area templates
   - Chat generation parameters
-- **Current Status**: ✅ In Progress
-  - Chat generation with varied expertise levels and jurisdictions
-  - Local storage implementation
-  - Basic focus area management
+- **Current Status**: ✅ Implemented
 
-### Phase 2: Chat Analysis (Planned)
+### Phase 2: Chat Analysis (Current)
 - **Core Components**
-  - `ChatAnalyzer`: Processes individual chats
-  - `InsightExtractor`: Identifies key topics and FAQs
-  - `TimeSavingsCalculator`: Estimates time savings
-    - Tracks two key metrics:
-      - `chatDuration`: Time spent in AI consultation
-      - `traditionalDuration`: Estimated time for equivalent traditional research
-    - Calculates time savings: `traditionalDuration - chatDuration`
-    - Considers factors for traditional duration:
-      - Legal research time
-      - Document review time
-      - Consultation preparation
-      - Follow-up communication
+  - `ChatAnalyzer`: Single class handling all analysis aspects
+    - Topic Extraction: Uses LLM to identify key legal topics discussed
+    - FAQ Generation: Uses LLM to extract common questions and answers
+    - Time Analysis: Calculates two key metrics:
+      - `chatDuration`: Estimated time spent in AI consultation
+        - Based on word count and reading speed
+        - Includes comprehension and response formulation time
+      - `traditionalDuration`: Estimated time for traditional research
+        - Considers legal research time
+        - Includes document review and consultation preparation
+      - Calculates time savings: `traditionalDuration - chatDuration`
 - **Features**
-  - Topic extraction
-  - FAQ identification
-  - Time savings estimation
-  - Analysis storage
-- **Status**: ⏳ Planned
+  - LLM-powered topic and FAQ extraction
+  - Standardized time calculations
+  - Analysis results stored in chat metadata
+- **Status**: ✅ Implemented
 
 ### Phase 3: Report Generation (Planned)
 - **Core Components**
@@ -88,6 +82,21 @@ npm run generate-chat commercial_contracts 5
 npm run generate-chat privacy 3
 ```
 
+#### Analyzing Chats
+Analyze chats to extract insights, FAQs, and time savings estimates:
+
+```bash
+# Run analysis in dry-run mode (preview without saving)
+npm run analyze-chats commercial_contracts --dry-run
+```
+
+The analysis will:
+1. Extract key topics and FAQs from the conversation
+2. Calculate chat duration based on message content
+3. Estimate traditional research time
+4. Calculate potential time savings
+5. Update the chat metadata with analysis results
+
 #### Managing Chats
 Archive and clear chats for a specific legal focus:
 
@@ -103,18 +112,19 @@ legal-aider/
 │   ├── main.ts
 │   ├── core/           # Core functionality
 │   │   ├── ChatGenerator.ts
-│   │   └── ChatAnalyzer.ts
+│   │   ├── ChatAnalyzer.ts
 │   │   └── ReportGenerator.ts
 │   ├── models/         # Type definitions
-│   │   └── Chat.ts
-│   │   └── Analysis.ts
+│   │   ├── Chat.ts
+│   │   ├── Analysis.ts
 │   │   └── Report.ts
 │   ├── chatStorage/    # Chat persistence
-│   │   └── ChatStorage.ts
-│   │   └── legalChats.json
+│   │   ├── ChatStorage.ts
+│   │   ├── legalChats.json
 │   │   └── archivedLegalChats.json
 │   └── scripts/        # CLI tools
 │       ├── generateChat.ts
+│       ├── analyzeAndUpdateChats.ts
 │       └── archiveChats.ts
 ├── config/             # Configuration files
 │   └── config.ts
