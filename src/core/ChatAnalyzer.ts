@@ -1,43 +1,177 @@
-import { Chat } from '../models/Chat';
-import { Analysis } from '../models/Analysis';
+import { Chat, ChatMessage } from '../models/Chat';
+import { ChatOpenAI } from '@langchain/openai';
+import { config } from '../config/config';
 
-/**
- * Sample Chat for reference
- * {
-  id: "chat_123",
-  legalFocus: "commercial_contracts",
-  context: {
-    scenario: "Reviewing a software licensing agreement for a startup",
-    userRole: "in-house counsel",
-    expertiseLevel: "intermediate",
-    jurisdiction: "California"
-  },
-  messages: [
-    {
-      role: "user",
-      content: "What are the key clauses I should look for in this software licensing agreement?",
-      timestamp: "2024-04-26T12:00:00Z",
-      messageType: "question"
-    },
-    {
-      role: "assistant",
-      content: "The most critical clauses to review are: 1) License Grant...",
-      timestamp: "2024-04-26T12:01:00Z",
-      messageType: "answer"
-    }
-  ],
-  metadata: {
-    createdAt: "2024-04-26T12:00:00Z",
-    estimatedDuration: 15,
-    complexity: "medium"
-  }
+interface ChatAnalysis {
+    topics: string[];
+    faqs: string[];
+    timeSavings: {
+        chatDuration: number;
+        traditionalDuration: number;
+        timeSaved: number;
+        factors: {
+            legalResearch: number;
+            documentReview: number;
+            preparation: number;
+            followUp: number;
+        };
+    };
 }
- */
-export class ChatAnalyzer {
-    constructor() {}
 
-    async analyzeChat(chat: Chat): Promise<Analysis> {
-        // TODO: Implement chat analysis logic
-        throw new Error('Not implemented');
+interface ChatUpdate {
+    id: string;
+    metadata: {
+        chatDuration: number;
+        complexity: 'low' | 'medium' | 'high';
+    };
+    timeSavings: {
+        traditionalDuration: number;
+        timeSaved: number;
+        factors: {
+            legalResearch: number;
+            documentReview: number;
+            preparation: number;
+            followUp: number;
+        };
+    };
+}
+
+export class ChatAnalyzer {
+    private model: ChatOpenAI;
+    private readonly WORDS_PER_MINUTE = 200;
+    private readonly COMPREHENSION_MULTIPLIER = 1.5;
+    private readonly RESPONSE_FORMULATION = 2;
+
+    constructor() {
+        this.model = new ChatOpenAI({
+            modelName: config.defaultModel,
+            // temperature: 0.3, // Lower temperature for more focused analysis
+        });
+    }
+
+    private calculateChatDuration(messages: ChatMessage[]): number {
+        let totalTime = 0;
+
+        for (const message of messages) {
+            const wordCount = message.content.split(/\s+/).length;
+            const readingTime = (wordCount / this.WORDS_PER_MINUTE) * this.COMPREHENSION_MULTIPLIER;
+
+            if (message.role === 'user') {
+                totalTime += readingTime + this.RESPONSE_FORMULATION;
+            } else {
+                totalTime += readingTime;
+            }
+        }
+
+        return Math.ceil(totalTime);
+    }
+
+    private async extractTopics(messages: ChatMessage[]): Promise<string[]> {
+        const prompt = `Analyze the following legal consultation conversation and extract detailed legal topics and sub-topics.
+        For each main topic, include:
+        1. The primary legal concept
+        2. Key sub-topics or related issues
+        3. The context or specific aspects discussed
+        4. Any jurisdictional considerations mentioned
+        
+        Format each topic as: "Main Topic: [topic] | Sub-topics: [sub1, sub2] | Context: [context] | Jurisdiction: [jurisdiction]"
+        
+        Conversation:
+        ${messages.map(m => `${m.role}: ${m.content}`).join('\n')}`;
+
+        const response = await this.model.invoke(prompt);
+        return response.content.toString().split('\n').filter(topic => topic.trim() !== '');
+    }
+
+    private async extractFAQs(messages: ChatMessage[]): Promise<string[]> {
+        const prompt = `Analyze the following legal consultation conversation and extract the key questions asked.
+        Focus on questions that represent common legal queries or concerns.
+        Return the questions as a comma-separated list.
+        
+        Conversation:
+        ${messages.map(m => `${m.role}: ${m.content}`).join('\n')}`;
+
+        const response = await this.model.invoke(prompt);
+        return response.content.toString().split(',').map(faq => faq.trim());
+    }
+
+    private calculateTimeSavings(chat: Chat, topics: string[], faqs: string[]): ChatAnalysis['timeSavings'] {
+        // Base times for traditional methods (in minutes)
+        const baseTimes = {
+            legalResearch: 30,
+            documentReview: 20,
+            preparation: 15,
+            followUp: 10
+        };
+
+        // Calculate complexity multiplier based on analysis
+        const complexityMultiplier = this.calculateComplexityMultiplier(topics, faqs, chat.metadata.complexity);
+
+        // Calculate traditional duration for each factor and round to nearest whole number
+        const factors = {
+            legalResearch: Math.round(baseTimes.legalResearch * complexityMultiplier),
+            documentReview: Math.round(baseTimes.documentReview * complexityMultiplier),
+            preparation: Math.round(baseTimes.preparation * complexityMultiplier),
+            followUp: Math.round(baseTimes.followUp * complexityMultiplier)
+        };
+
+        // Calculate total traditional duration
+        const traditionalDuration = Object.values(factors).reduce((sum, time) => sum + time, 0);
+        const chatDuration = this.calculateChatDuration(chat.messages);
+
+        return {
+            chatDuration,
+            traditionalDuration,
+            timeSaved: traditionalDuration - chatDuration,
+            factors
+        };
+    }
+
+    private calculateComplexityMultiplier(topics: string[], faqs: string[], complexity: 'low' | 'medium' | 'high'): number {
+        let multiplier = 1.0;
+        
+        // Adjust based on number of topics
+        multiplier += (topics.length - 1) * 0.2;
+        
+        // Adjust based on number of FAQs
+        multiplier += (faqs.length - 1) * 0.1;
+        
+        // Adjust based on chat complexity
+        if (complexity === 'high') multiplier *= 1.5;
+        if (complexity === 'medium') multiplier *= 1.2;
+        
+        return multiplier;
+    }
+
+    async analyze(chat: Chat): Promise<ChatAnalysis> {
+        const [topics, faqs] = await Promise.all([
+            this.extractTopics(chat.messages),
+            this.extractFAQs(chat.messages)
+        ]);
+
+        const timeSavings = this.calculateTimeSavings(chat, topics, faqs);
+
+        return {
+            topics,
+            faqs,
+            timeSavings
+        };
+    }
+
+    async analyzeForUpdate(chat: Chat): Promise<ChatUpdate> {
+        const analysis = await this.analyze(chat);
+        
+        return {
+            id: chat.id,
+            metadata: {
+                chatDuration: analysis.timeSavings.chatDuration,
+                complexity: chat.metadata.complexity
+            },
+            timeSavings: {
+                traditionalDuration: analysis.timeSavings.traditionalDuration,
+                timeSaved: analysis.timeSavings.timeSaved,
+                factors: analysis.timeSavings.factors
+            }
+        };
     }
 } 

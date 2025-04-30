@@ -11,8 +11,9 @@
     "lint": "eslint . --ext .ts",
     "format": "prettier --write \"src/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\"",
-    "generate-chat": "ts-node src/scripts/generateChat.ts",    
-    "archive-chats": "ts-node src/scripts/archiveChats.ts"
+    "generate-chat": "ts-node src/scripts/generateChat.ts",
+    "archive-chats": "ts-node src/scripts/archiveChats.ts",
+    "analyze-chats": "ts-node src/scripts/analyzeChats.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
