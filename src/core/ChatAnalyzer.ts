@@ -79,7 +79,8 @@ export class ChatAnalyzer {
         3. The context or specific aspects discussed
         4. Any jurisdictional considerations mentioned
         
-        Format each topic as: "Main Topic: [topic] | Sub-topics: [sub1, sub2] | Context: [context] | Jurisdiction: [jurisdiction]"
+        Format each topic as a single string: "Main Topic: [topic] | Sub-topics: [sub1, sub2] | Context: [context] | Jurisdiction: [jurisdiction]
+        Do NOT include any other characters or separators outside this single line except for the newlines between topics."
         
         Conversation:
         ${messages.map(m => `${m.role}: ${m.content}`).join('\n')}`;
@@ -91,7 +92,8 @@ export class ChatAnalyzer {
     private async extractFAQs(messages: ChatMessage[]): Promise<string[]> {
         const prompt = `Analyze the following legal consultation conversation and extract the key questions asked.
         Focus on questions that represent common legal queries or concerns.
-        Return the questions as a comma-separated list.
+        Return the questions as a comma-separated list. 
+        Do NOT include any other characters or separators outside this single line except for the newlines between topics."
         
         Conversation:
         ${messages.map(m => `${m.role}: ${m.content}`).join('\n')}`;
