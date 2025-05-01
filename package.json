@@ -13,12 +13,16 @@
     "format:check": "prettier --check \"src/**/*.ts\"",
     "generate-chat": "ts-node src/scripts/generateChat.ts",
     "archive-chats": "ts-node src/scripts/archiveChats.ts",
-    "analyze-chats": "ts-node src/scripts/analyzeAndUpdateChats.ts"
+    "analyze-chats": "ts-node src/scripts/analyzeAndUpdateChats.ts",
+    "test-report": "ts-node src/scripts/testReportGenerator.ts",
+    "generate-email": "ts-node src/scripts/generateEmail.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
     "@langchain/anthropic": "^0.3.19",
     "@langchain/core": "^0.3.49",
+    "@react-email/components": "^0.0.36",
+    "@react-email/render": "^1.0.6",
     "dotenv": "^16.0.3",
     "langchain": "^0.3.24",
     "openai": "^4.96.0",
@@ -28,6 +32,7 @@
   "devDependencies": {
     "@types/jest": "^29.0.0",
     "@types/node": "^22.15.0",
+    "@types/react": "^19.1.2",
     "@types/uuid": "^9.0.8",
     "@types/yargs": "^17.0.33",
     "@typescript-eslint/eslint-plugin": "^7.0.0",

@@ -97,6 +97,52 @@ The analysis will:
 4. Calculate potential time savings
 5. Update the chat metadata with analysis results
 
+#### Email Reports
+
+The system can generate professional email reports summarizing legal consultations and time savings. These reports are created using React Email templates and can be previewed in the browser.
+
+##### Setup
+
+The email template is located at `src/email/LegalAnalysisEmail.tsx`
+   - Uses React Email components for consistent email rendering
+   - Implements a responsive design with Tailwind CSS
+   - Includes sections for:
+     - Main topics discussed
+     - Time savings analysis
+     - Common legal questions
+   - Features professional styling with the brand color (#0E1F45)
+
+##### Generating Email Reports
+
+To generate an HTML preview of the email report:
+
+```bash
+npm run generate-email
+```
+
+This will:
+1. Load chat data from `legalChats.json`
+2. Generate a report using `ReportGenerator`
+3. Transform the data for the email template
+4. Render the email as HTML
+5. Save the output to `src/email/legal-analysis.html`
+
+The generated HTML file can be:
+- Previewed in a browser
+- Used as a template for email campaigns
+- Shared with stakeholders
+
+##### Email Template Features
+
+- Professional layout with brand colors
+- Responsive design for all email clients
+- Data visualization placeholders for:
+  - Topic distribution
+  - Time savings comparison
+  - Question type analysis
+- Detailed time savings analysis with methodology explanation
+- Contextual summaries of legal topics and FAQs
+
 #### Managing Chats
 Archive and clear chats for a specific legal focus:
 
@@ -122,10 +168,15 @@ legal-aider/
 │   │   ├── ChatStorage.ts
 │   │   ├── legalChats.json
 │   │   └── archivedLegalChats.json
+│   ├── email/          # Email templates and assets
+│   │   ├── LegalAnalysisEmail.tsx
+│   │   ├── legal-analysis.html
+│   │   └── gc-ai-logo.png
 │   └── scripts/        # CLI tools
 │       ├── generateChat.ts
 │       ├── analyzeAndUpdateChats.ts
-│       └── archiveChats.ts
+│       ├── archiveChats.ts
+│       └── generate-email.ts
 ├── config/             # Configuration files
 │   └── config.ts
 └── package.json
