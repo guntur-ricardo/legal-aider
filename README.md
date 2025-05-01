@@ -249,6 +249,3 @@ This will:
 
 [Placeholder for contribution guidelines]
 
-## License
-
-[Placeholder for license information]
