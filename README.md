@@ -5,7 +5,7 @@ A legal consultation AI assistant that generates, analyzes, and reports on legal
 ## Overview
 
 Legal Aider is a comprehensive tool that:
-1. Generats realistic legal consultation conversations
+1. Generates realistic legal consultation conversations
 2. Analyzes these conversations to extract insights, FAQs, time savings estimates
 3. Generates reports with visualizations 
 
