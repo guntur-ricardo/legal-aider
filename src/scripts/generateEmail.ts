@@ -12,7 +12,7 @@ async function generateAndPreviewEmail() {
     await storage.loadChats('commercial_contracts');
     const generator = new ReportGenerator();
     const report = await generator.generateReport('commercial_contracts');
-    
+     
     // Transform report data for email
     const emailData = {
       topics: report.topics.topics.map(topic => ({
@@ -41,7 +41,8 @@ async function generateAndPreviewEmail() {
           timeSaved: chat.timeSaved,
           factors: chat.factors
         }))
-      }
+      },
+      chartData: report.chartData
     };
 
     // Render email

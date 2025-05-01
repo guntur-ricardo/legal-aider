@@ -43,16 +43,19 @@ interface TimeSavingsData {
 }
 
 interface ChartData {
-    type: 'bar' | 'line' | 'pie';
-    data: any;  // Chart-specific data structure
-    options: any;  // Chart configuration
+    type: 'pie' | 'bar';
+    data: {
+        labels: string[];
+        values: number[];
+    };
+    title: string;
 }
 
 interface Report {
     topics: TopicAnalysis;
     faqs: FAQAnalysis;
     timeSavings: TimeSavingsData;
-    // charts: ChartData[];
+    chartData: ChartData[];
     emailTemplate: any;  // Will be React-Email template
 }
 
@@ -79,15 +82,16 @@ export class ReportGenerator {
         const timeSavings = this.calculateTimeSavings(chats);
         
         // 4. Generate visualizations
-        // const charts = this.generateCharts(topics, faqs, timeSavings);
+        const chartData = this.generateChartData(topics, faqs, timeSavings);
         
         // 5. Create email template
-        const emailTemplate = this.createEmailTemplate(topics, faqs, timeSavings);
+        const emailTemplate = this.createEmailTemplate(topics, faqs, timeSavings, chartData);
         
         return {
             topics,
             faqs,
             timeSavings,            
+            chartData,
             emailTemplate
         };
     }
@@ -344,26 +348,58 @@ Return the response in JSON format matching this structure:
         };
     }
 
-    private generateCharts(
+    private generateChartData(
         topics: TopicAnalysis,
         faqs: FAQAnalysis,
         timeSavings: TimeSavingsData
     ): ChartData[] {
-        // TODO: Implement chart generation
-        throw new Error('Not implemented');
+        return [
+            // Topics Distribution (Pie)
+            {
+                type: 'pie',
+                data: {
+                    labels: topics.topics.map(t => t.name),
+                    values: topics.topics.map(t => t.frequency)
+                },
+                title: 'Distribution of Legal Topics'
+            },
+            // Time Comparison (Bar)
+            {
+                type: 'bar',
+                data: {
+                    labels: ['Traditional Research', 'AI Consultation'],
+                    values: [
+                        timeSavings.summary.totalTraditionalTime,
+                        timeSavings.summary.totalAITime
+                    ]
+                },
+                title: 'Time Comparison: AI vs Traditional'
+            },
+            // Question Types (Pie)
+            {
+                type: 'pie',
+                data: {
+                    labels: faqs.faqs.map(f => f.theme),
+                    values: faqs.faqs.map(f => f.count)
+                },
+                title: 'Distribution of Question Types'
+            }
+        ];
     }
 
     private createEmailTemplate(
         topics: TopicAnalysis,
         faqs: FAQAnalysis,
-        timeSavings: TimeSavingsData
+        timeSavings: TimeSavingsData,
+        chartData: ChartData[]
     ): any {
         return {
             component: 'LegalAnalysisEmail',
             props: {
                 topics: topics.topics,
                 faqs: faqs.faqs,
-                timeSavings: timeSavings
+                timeSavings: timeSavings,
+                chartData: chartData
             }
         };
     }

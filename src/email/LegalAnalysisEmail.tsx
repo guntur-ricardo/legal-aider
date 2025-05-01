@@ -12,6 +12,34 @@ import {
   Text,
   Img,
 } from '@react-email/components';
+import Chart from './components/Chart';
+
+// Chart theme configuration
+const chartTheme = {
+  colors: {
+    primary: '#0E1F45',    // Main brand color
+    secondary: '#2C4A8F',  // Slightly lighter
+    accent: '#4A6BB5',     // Even lighter
+    light: '#6B8CDB',      // Light blue
+    lightest: '#8CAEE1'    // Lightest blue
+  }
+};
+
+// Helper to get colors for a chart based on its type and data length
+const getChartColors = (type: 'pie' | 'bar', dataLength: number): string[] => {
+  const { colors } = chartTheme;
+  if (type === 'bar') {
+    return [colors.primary, colors.accent];
+  }
+  // For pie charts, distribute colors based on data length
+  return [
+    colors.primary,
+    colors.secondary,
+    colors.accent,
+    colors.light,
+    colors.lightest
+  ].slice(0, dataLength);
+};
 
 interface LegalAnalysisEmailProps {
   topics: {
@@ -46,6 +74,14 @@ interface LegalAnalysisEmailProps {
       };
     }[];
   };
+  chartData: Array<{
+    type: 'pie' | 'bar';
+    data: {
+      labels: string[];
+      values: number[];
+    };
+    title: string;
+  }>;
 }
 
 // Static preview data
@@ -87,15 +123,53 @@ const previewData: LegalAnalysisEmailProps = {
         }
       }
     ]
-  }
+  },
+  chartData: [
+    {
+      type: 'pie',
+      data: {
+        labels: ["Contract Drafting & Enforceability", "Risk Allocation"],
+        values: [13, 17]
+      },
+      title: "Main Topics Discussed"
+    },
+    {
+      type: 'bar',
+      data: {
+        labels: ["Contract Drafting & Enforceability", "Risk Allocation"],
+        values: [13, 17]
+      },
+      title: "Main Topics Discussed"
+    },
+    {
+      type: 'pie',
+      data: {
+        labels: ["Risk Allocation"],
+        values: [17]
+      },
+      title: "Common Legal Questions"
+    }
+  ]
 };
 
 export const LegalAnalysisEmail = ({
   topics = previewData.topics,
   faqs = previewData.faqs,
   timeSavings = previewData.timeSavings,
+  chartData = previewData.chartData,
 }: Partial<LegalAnalysisEmailProps> = {}) => {
-  const previewText = "Legal AI Analysis Report";
+  // Transform chart data with theme
+  const themedChartData = chartData.map((chart) => ({
+    type: chart.type,
+    data: {
+      labels: chart.data.labels,
+      values: chart.data.values,
+      colors: getChartColors(chart.type, chart.data.values.length)
+    },
+    title: chart.title
+  }));
+
+  const previewText = "Analysis Report";
   const brandColor = 'rgba(14, 31, 69, 0.9)';
 
   return (
@@ -126,16 +200,17 @@ export const LegalAnalysisEmail = ({
               </Section>
             </Section>
 
-            {/* Topics Section */}
+            {/* Topics Section with Chart */}
             <Section className="mt-[32px] bg-white rounded-lg p-6">
               <Heading className="text-[#0E1F45] text-[22px] font-semibold p-0 my-[20px] mx-0">
                 Main Topics Discussed
               </Heading>
               
-              {/* Placeholder for Topics Chart */}
-              <Section className="my-6 bg-gray-100 rounded p-4 text-center text-gray-500">
-                [Pie Chart: Distribution of Legal Topics]
-              </Section>
+              <Chart
+                type="pie"
+                data={themedChartData[0].data}
+                title={themedChartData[0].title}
+              />
 
               {topics.map((topic) => (
                 <Section key={topic.name} className="mb-[24px] last:mb-0">
@@ -154,11 +229,17 @@ export const LegalAnalysisEmail = ({
 
             <Hr className="border border-solid border-[#eaeaea] my-[32px] mx-0 w-full" />
 
-            {/* Time Savings Section */}
+            {/* Time Savings Section with Chart */}
             <Section className="mt-[32px] bg-white rounded-lg p-6">
               <Heading className="text-[#0E1F45] text-[22px] font-semibold p-0 my-[20px] mx-0">
                 Time Savings Analysis
               </Heading>
+
+              <Chart
+                type="bar"
+                data={themedChartData[1].data}
+                title={themedChartData[1].title}
+              />
 
               <Section className="mb-6">
                 <Text className="text-gray-600 text-[14px] leading-[22px]">
@@ -173,11 +254,6 @@ export const LegalAnalysisEmail = ({
                 <Text className="text-gray-600 text-[14px] leading-[22px] mt-4">
                   These estimates are conservative and based on actual legal practice patterns, ensuring a fair comparison between AI-assisted and traditional legal workflows. The following analysis is derived from 10 distinct legal consultations, providing a representative sample of real-world usage patterns.
                 </Text>
-              </Section>
-
-              {/* Placeholder for Time Savings Chart */}
-              <Section className="my-6 bg-gray-100 rounded p-4 text-center text-gray-500">
-                [Bar Chart: AI vs Traditional Time Comparison]
               </Section>
 
               <div className="grid grid-cols-2 gap-4">
@@ -220,16 +296,17 @@ export const LegalAnalysisEmail = ({
 
             <Hr className="border border-solid border-[#eaeaea] my-[32px] mx-0 w-full" />
 
-            {/* FAQ Section */}
+            {/* FAQ Section with Chart */}
             <Section className="mt-[32px] bg-white rounded-lg p-6">
               <Heading className="text-[#0E1F45] text-[22px] font-semibold p-0 my-[20px] mx-0">
                 Common Legal Questions
               </Heading>
 
-              {/* Placeholder for FAQ Chart */}
-              <Section className="my-6 bg-gray-100 rounded p-4 text-center text-gray-500">
-                [Pie Chart: Distribution of Question Types]
-              </Section>
+              <Chart
+                type="pie"
+                data={themedChartData[2].data}
+                title={themedChartData[2].title}
+              />
 
               {faqs.map((faq) => (
                 <Section key={faq.theme} className="mb-[24px] last:mb-0">
