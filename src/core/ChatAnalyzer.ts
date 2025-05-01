@@ -1,6 +1,8 @@
 import { Chat, ChatMessage } from '../models/Chat';
 import { ChatOpenAI } from '@langchain/openai';
+import { ChatAnthropic } from '@langchain/anthropic';
 import { config } from '../config/config';
+import { createAIClient } from './AIClient';
 
 interface ChatAnalysis {
     topics: string[];
@@ -39,16 +41,17 @@ interface ChatUpdate {
 }
 
 export class ChatAnalyzer {
-    private model: ChatOpenAI;
+    private model: ChatOpenAI | ChatAnthropic;
     private readonly WORDS_PER_MINUTE = 200;
     private readonly COMPREHENSION_MULTIPLIER = 1.5;
     private readonly RESPONSE_FORMULATION = 2;
 
     constructor() {    
-        this.model = new ChatOpenAI({
-            modelName: config.defaultModel,            
-            // temperature: 0.3, // Lower temperature for more focused analysis
-        });
+        this.model = createAIClient(
+            config.aiModel,
+            config.defaultModel,
+            config.temperature
+        );
     }
 
     private calculateChatDuration(messages: ChatMessage[]): number {

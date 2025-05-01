@@ -4,14 +4,46 @@ A legal consultation AI assistant that generates, analyzes, and reports on legal
 
 ## Overview
 
-Legal Aider is a comprehensive tool that helps legal teams by:
-1. Generating realistic legal consultation conversations
-2. Analyzing these conversations to extract insights, FAQs, time savings estimates
-3. Generating reports with visualizations 
+Legal Aider is a comprehensive tool that:
+1. Generats realistic legal consultation conversations
+2. Analyzes these conversations to extract insights, FAQs, time savings estimates
+3. Generates reports with visualizations 
+
+## Project Structure
+
+```
+legal-aider/
+├── src/
+│   ├── main.ts
+│   ├── core/           # Core functionality
+│   │   ├── ChatGenerator.ts
+│   │   ├── ChatAnalyzer.ts
+│   │   └── ReportGenerator.ts
+│   ├── models/         # Type definitions
+│   │   ├── Chat.ts
+│   │   ├── Analysis.ts
+│   │   └── Report.ts
+│   ├── chatStorage/    # Chat persistence
+│   │   ├── ChatStorage.ts
+│   │   ├── legalChats.json
+│   │   └── archivedLegalChats.json
+│   ├── email/          # Email templates and assets
+│   │   ├── LegalAnalysisEmail.tsx
+│   │   ├── legal-analysis.html
+│   │   └── gc-ai-logo.png
+│   └── scripts/        # CLI tools
+│       ├── generateChat.ts
+│       ├── analyzeAndUpdateChats.ts
+│       ├── archiveChats.ts
+│       └── generate-email.ts
+├── config/             # Configuration files
+│   └── config.ts
+└── package.json
+```
 
 ## Project Phases
 
-### Phase 1: Synthetic Chat Generation (Current)
+### Phase 1: Synthetic Chat Generation
 - **Core Components**
   - `ChatGenerator`: Handles synthetic chat generation using LangChain and is configurable via role, expertise and jurisdiction.
   - `ChatStorage`: Handles storage of generated chats (local storage for now)
@@ -19,9 +51,24 @@ Legal Aider is a comprehensive tool that helps legal teams by:
   - AI model configuration (GPT/Claude)
   - Legal focus area templates
   - Chat generation parameters
+- **Key Architectural Decisions & Trade-offs**
+  - Single Chat Generation: Each chat is generated with a dedicated AI invocation
+    - ✅ Maximizes AI focus on generating high-quality interactions
+    - ❌ Increases number of API requests and associated costs
+  - Context-Aware Generation: Includes existing chats when generating new ones
+    - ✅ Ensures variety and prevents repetitive conversations
+    - ❌ Larger context per request increases token usage
+  - Local JSON Storage: Simple file-based storage for chats
+    - ✅ Easy to implement and inspect chat data
+    - ✅ Maintains chat structure with metadata
+    - ❌ Not suitable for production/concurrent access
+  - Modular Parameter System: Configurable roles, expertise levels, and jurisdictions
+    - ✅ Highly flexible chat generation
+    - ✅ Easy to extend with new parameters
+    - ❌ Increased complexity in parameter validation
 - **Current Status**: ✅ Implemented
 
-### Phase 2: Chat Analysis (Current)
+### Phase 2: Chat Analysis
 - **Core Components**
   - `ChatAnalyzer`: Single class handling all analysis aspects
     - Topic Extraction: Uses LLM to identify key legal topics discussed
@@ -38,24 +85,49 @@ Legal Aider is a comprehensive tool that helps legal teams by:
   - LLM-powered topic and FAQ extraction
   - Standardized time calculations
   - Analysis results stored in chat metadata
+- **Key Architectural Decisions & Trade-offs**
+  - LLM-Based Analysis: Using LLMs for topic and FAQ extraction
+    - ✅ High-quality, context-aware analysis
+    - ✅ Natural language understanding capabilities
+    - ❌ Higher computational cost and latency
+  - Time-Based Metrics: Focus on time savings calculations
+    - ✅ Tangible value proposition for stakeholders
+    - ✅ Standardized methodology for comparison
+    - ❌ May not capture all aspects of value (e.g., quality, accuracy)
+    - NOTE: I would personally do some case studies with lawyers to fine tune time calculation.
+  - Metadata Storage: Analysis results stored within chat objects
+    - ✅ Maintains data cohesion
+    - ✅ Easy to access analysis results with chat data
+    - ❌ Increased storage requirements
 - **Status**: ✅ Implemented
 
-### Phase 3: Report Generation (Planned)
+### Phase 3: Report Generation
 - **Core Components**
   - `ReportGenerator`: Creates email reports
-  - `VisualizationBuilder`: Creates charts/graphs
-  - `EmailTemplate`: React-Email templates
+  - `Chart`: Creates charts/graphs
+  - `LegalAnalysisEmail`: React-Email templates
 - **Features**
-  - Summary generation
+  - Data Summary generation and compilation
   - Visual data representation
   - Email formatting
-- **Status**: ⏳ Planned
+- **Key Architectural Decisions & Trade-offs**
+  - SVG-Based Charts: Custom SVG implementation for data visualization
+    - ✅ No external dependencies
+    - ✅ Consistent rendering across email clients
+    - ❌ More complex to implement than using chart libraries
+  - Static HTML Output: Generating static HTML files for preview
+    - ✅ Easy to preview and test
+    - ✅ Can be used as email templates
+    - ❌ Requires regeneration for data updates
+    NOTE: I basically did this just to demo it. Real world generation would be in some email service that has access to the report endpoint.
+- **Status**: ✅ Implemented
 
 ## Getting Started
 
 ### Prerequisites
 - Node.js (v16 or higher)
-- OpenAI API key
+- OpenAI API key (if using OpenAI)
+- Anthropic API key (if using Anthropic)
 
 ### Installation
 1. Clone the repository
@@ -63,9 +135,13 @@ Legal Aider is a comprehensive tool that helps legal teams by:
    ```bash
    npm install
    ```
-3. Create a `.env` file with your OpenAI API key:
+3. Create a `.env` file with your API keys:
    ```
-   OPENAI_API_KEY=your_api_key_here
+   # Required for OpenAI
+   OPENAI_API_KEY=your_openai_api_key_here
+   
+   # Required for Anthropic
+   ANTHROPIC_API_KEY=your_anthropic_api_key_here
    ```
 
 ### Usage
@@ -79,7 +155,7 @@ npm run generate-chat commercial_contracts
 
 # Generate multiple chats
 npm run generate-chat commercial_contracts 5
-npm run generate-chat privacy 3
+npm run generate-chat privacy 10
 ```
 
 #### Analyzing Chats
@@ -150,37 +226,24 @@ Archive and clear chats for a specific legal focus:
 npm run archive-chats commercial_contracts
 ```
 
-## Project Structure
+#### Demo!
+```bash
+npm run demo
+```
+This will:
+1. Archive any existing chats for both privacy and commercial_contracts
+2. Generate 10 new chats for each focus area with varied:
+   - Expertise levels (beginner, intermediate, expert)
+   - User roles (in-house counsel, startup founder, legal consultant)
+   - Jurisdictions (CA, NY, TX, DE, IL)
+3. Analyze the generated chats to extract:
+   - Key legal topics and themes
+   - Common questions and answers
+   - Time savings estimates
+4. Generate email reports for each focus area:
+   - `legal-analysis-privacy.html`
+   - `legal-analysis-commercial_contracts.html`
 
-```
-legal-aider/
-├── src/
-│   ├── main.ts
-│   ├── core/           # Core functionality
-│   │   ├── ChatGenerator.ts
-│   │   ├── ChatAnalyzer.ts
-│   │   └── ReportGenerator.ts
-│   ├── models/         # Type definitions
-│   │   ├── Chat.ts
-│   │   ├── Analysis.ts
-│   │   └── Report.ts
-│   ├── chatStorage/    # Chat persistence
-│   │   ├── ChatStorage.ts
-│   │   ├── legalChats.json
-│   │   └── archivedLegalChats.json
-│   ├── email/          # Email templates and assets
-│   │   ├── LegalAnalysisEmail.tsx
-│   │   ├── legal-analysis.html
-│   │   └── gc-ai-logo.png
-│   └── scripts/        # CLI tools
-│       ├── generateChat.ts
-│       ├── analyzeAndUpdateChats.ts
-│       ├── archiveChats.ts
-│       └── generate-email.ts
-├── config/             # Configuration files
-│   └── config.ts
-└── package.json
-```
 
 ## Contributing
 

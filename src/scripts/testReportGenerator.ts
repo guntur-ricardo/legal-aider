@@ -2,11 +2,15 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 import { ReportGenerator } from '../core/ReportGenerator';
+import { config } from '../config/config';
 
 async function main() {
-    // Check for OpenAI API key    
-    if (!process.env.OPENAI_API_KEY) {
+    // Check for required API key
+    if (config.aiModel === 'openai' && !process.env.OPENAI_API_KEY) {
         console.error('Error: OPENAI_API_KEY is not set in environment variables');
+        process.exit(1);
+    } else if (config.aiModel === 'anthropic' && !process.env.ANTHROPIC_API_KEY) {
+        console.error('Error: ANTHROPIC_API_KEY is not set in environment variables');
         process.exit(1);
     }
 

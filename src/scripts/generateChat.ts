@@ -2,6 +2,7 @@ import { ChatGenerator } from '../core/ChatGenerator';
 import { ChatContext } from '../models/Chat';
 import { ChatStorage } from '../chatStorage/ChatStorage';
 import * as dotenv from 'dotenv';
+import { config } from '../config/config';
 
 // Load environment variables
 dotenv.config();
@@ -11,9 +12,12 @@ const jurisdictions = ['California', 'New York', 'Texas', 'Delaware', 'Illinois'
 const userRoles = ['in-house counsel', 'startup founder', 'legal consultant'] as const;
 
 async function main() {
-    // Check for OpenAI API key    
-    if (!process.env.OPENAI_API_KEY) {
+    // Check for required API key
+    if (config.aiModel === 'openai' && !process.env.OPENAI_API_KEY) {
         console.error('Error: OPENAI_API_KEY is not set in environment variables');
+        process.exit(1);
+    } else if (config.aiModel === 'anthropic' && !process.env.ANTHROPIC_API_KEY) {
+        console.error('Error: ANTHROPIC_API_KEY is not set in environment variables');
         process.exit(1);
     }
 

@@ -1,7 +1,9 @@
 import { Chat } from '../models/Chat';
 import { ChatStorage } from '../chatStorage/ChatStorage';
 import { ChatOpenAI } from '@langchain/openai';
+import { ChatAnthropic } from '@langchain/anthropic';
 import { config } from '../config/config';
+import { createAIClient } from './AIClient';
 
 interface TopicAnalysis {
     topics: {
@@ -61,13 +63,15 @@ interface Report {
 
 export class ReportGenerator {
     private chatStorage: ChatStorage;
-    private model: ChatOpenAI;
+    private model: ChatOpenAI | ChatAnthropic;
 
     constructor() {
         this.chatStorage = new ChatStorage();
-        this.model = new ChatOpenAI({
-            modelName: config.defaultModel,            
-        });
+        this.model = createAIClient(
+            config.aiModel,
+            config.defaultModel,
+            config.temperature
+        );
     }
 
     async generateReport(focus: 'commercial_contracts' | 'privacy'): Promise<Report> {
@@ -75,6 +79,7 @@ export class ReportGenerator {
         const chats = await this.chatStorage.loadChats(focus);
         
         // 2. Process topics and FAQs
+        console.log(`Analyzing topics and FAQs for ${focus} chats...`);
         const topics = await this.analyzeTopics(chats);
         const faqs = await this.analyzeFAQs(chats);
         
@@ -96,6 +101,11 @@ export class ReportGenerator {
         };
     }
 
+    private cleanJsonResponse(response: string): string {
+        // Remove markdown code block syntax if present
+        return response.replace(/```json\n?|\n?```/g, '').trim();
+    }
+
     private async analyzeTopics(chats: Chat[]): Promise<TopicAnalysis> {
         // Extract all topics from chats
         const allTopics = chats.flatMap(chat => chat.metadata.topics || []);
@@ -113,7 +123,7 @@ Themes should be broad legal concepts, while example topics should be specific i
 Topics to analyze:
 ${allTopics.join('\n')}
 
-Return the response in JSON format matching this structure:
+Return the response in JSON format matching this structure exactly. Do not include any other text or comments:
 {
     "topics": [
         {
@@ -126,89 +136,11 @@ Return the response in JSON format matching this structure:
 }`;
 
         try {
-            // const response = await this.model.invoke(prompt);
-            // return JSON.parse(response.content.toString());
-            return {
-                "topics": [
-                  {
-                    "name": "Contract Drafting & Enforceability",
-                    "themes": [
-                      "Formation, clarity and integration of contract terms",
-                      "Statutory / UCC compliance and public-policy limits",
-                      "Drafting precision to ensure judicial enforceability"
-                    ],
-                    "frequency": 13,
-                    "exampleTopics": [
-                      "Contract Formation & Enforceability (Illinois)",
-                      "Uniform Commercial Code (UCC) Applicability",
-                      "Drafting Clarity & Enforceability (Delaware)",
-                      "Enforceability of Contract Terms under NY Law"
-                    ]
-                  },
-                  {
-                    "name": "Risk Allocation & Liability Management",
-                    "themes": [
-                      "Limitations of liability, damages caps and exclusions",
-                      "Warranties, indemnities and insurance back-stops",
-                      "Quantitative risk assessment and financial impact analysis"
-                    ],
-                    "frequency": 20,
-                    "exampleTopics": [
-                      "Warranty Provisions & Limitations of Liability",
-                      "Indemnification Clauses",
-                      "Limitation of Liability for Data Breaches & Security Incidents",
-                      "Product-Liability Exposure"
-                    ]
-                  },
-                  {
-                    "name": "Intellectual Property & Data Rights",
-                    "themes": [
-                      "Ownership vs. licensing of IP and derivative works",
-                      "Confidentiality, trade-secret and data-privacy protections",
-                      "Scope of use, sublicensing and residual-knowledge rights"
-                    ],
-                    "frequency": 18,
-                    "exampleTopics": [
-                      "Software Licensing Agreement Structure",
-                      "Intellectual Property Rights Assurance",
-                      "Data Privacy & Usage Rights (Texas)",
-                      "Intellectual Property Ownership of Deliverables"
-                    ]
-                  },
-                  {
-                    "name": "Termination, Assignment & Subcontracting Controls",
-                    "themes": [
-                      "Grounds and procedures for termination or suspension",
-                      "Post-termination obligations, remedies and step-in rights",
-                      "Consent, monitoring and liability for assignments or subcontractors"
-                    ],
-                    "frequency": 14,
-                    "exampleTopics": [
-                      "Termination & Exit Rights (California)",
-                      "Commercial Contract Termination Clause under NY Contract Law",
-                      "Assignment of Contractual Rights and Obligations (Delaware)",
-                      "Termination & Remedies Linked to Subcontracting"
-                    ]
-                  },
-                  {
-                    "name": "Dispute Resolution & Negotiation Strategy",
-                    "themes": [
-                      "ADR mechanisms, governing-law and forum selection",
-                      "Negotiation, communication and stakeholder management",
-                      "Ongoing monitoring, audit and compliance enforcement"
-                    ],
-                    "frequency": 16,
-                    "exampleTopics": [
-                      "Dispute Resolution Mechanisms (Texas)",
-                      "Negotiation Strategies for Startup Founders in Supply Agreements",
-                      "Internal Stakeholder Consultation",
-                      "Breach of Contract Enforcement"
-                    ]
-                  }
-                ]
-              }
+            const response = await this.model.invoke(prompt);
+            const cleanedResponse = this.cleanJsonResponse(response.content.toString());            
+            return JSON.parse(cleanedResponse);
         } catch (error) {
-            console.error('Error analyzing topics:', error);
+            console.error('Error analyzing topics:', error);            
             throw error;
         }
     }
@@ -237,7 +169,7 @@ For each group:
 Questions to analyze:
 ${allQuestions.join('\n')}
 
-Return the response in JSON format matching this structure:
+Return the response in JSON format matching this structure exactly. Do not include any other text or comments:
 {
     "faqs": [
         {
@@ -250,67 +182,9 @@ Return the response in JSON format matching this structure:
 }`;
 
         try {
-            // const response = await this.model.invoke(prompt);
-            // return JSON.parse(response.content.toString());
-            return {
-                "faqs": [
-                  {
-                    "theme": "Risk Allocation – Warranty & Limitation-of-Liability Clauses",
-                    "representativeQuestion": "How should a company negotiate a limitation-of-liability or warranty clause in a technology contract while safeguarding its interests under the governing state law?",
-                    "count": 17,
-                    "similarQuestions": [
-                      "What specific legal considerations should be assessed before accepting a limitation-of-liability clause related to data breaches under California law?",
-                      "How can you ensure that a limitation-of-liability clause for project delays is enforceable under New York law and does not unduly restrict your remedies?",
-                      "What negotiation strategies help preserve recovery for damages caused by defective products when facing a supplier's proposed liability cap under Illinois law?"
-                    ]
-                  },
-                  {
-                    "theme": "Exit Rights – Early Termination Clauses",
-                    "representativeQuestion": "How should a startup negotiate a vendor's request for a minimal-notice termination clause while protecting its interests under New York law?",
-                    "count": 1,
-                    "similarQuestions": [
-                      "What contractual safeguards can limit a counter-party's ability to walk away on short notice without paying transition costs?",
-                      "How do New York UCC provisions on good-faith and commercial reasonableness influence negotiations over unilateral termination rights?"
-                    ]
-                  },
-                  {
-                    "theme": "Contract Enforcement – Breach, Remedies & Dispute Resolution",
-                    "representativeQuestion": "How should a construction company enforce a subcontractor's breached agreement and pursue damages under Texas law?",
-                    "count": 3,
-                    "similarQuestions": [
-                      "What legal remedies are available under Texas law when a subcontractor's delays cause cost overruns on a project?",
-                      "How can a company leverage contractual dispute-resolution mechanisms to recover losses from a vendor's non-performance while minimizing project disruption?"
-                    ]
-                  },
-                  {
-                    "theme": "Transfer of Obligations – Assignment & Subcontracting Controls",
-                    "representativeQuestion": "How can a company negotiate assignment or subcontracting clauses to retain control over third-party involvement while remaining compliant with Delaware law?",
-                    "count": 9,
-                    "similarQuestions": [
-                      "What legal considerations arise when a marketing agency seeks the right to subcontract services without prior approval under Delaware law?",
-                      "How can a construction company set up approval mechanisms before a subcontractor assigns its contract rights to a third party, ensuring enforceability under Delaware law?"
-                    ]
-                  },
-                  {
-                    "theme": "Intellectual Property Ownership in Development Agreements",
-                    "representativeQuestion": "How should a startup negotiate ownership of code and other IP created by a software developer to ensure future use and protection under Illinois law?",
-                    "count": 5,
-                    "similarQuestions": [
-                      "What contract language secures a company's access to source code while respecting a developer's retained IP rights under Illinois law?",
-                      "How can parties craft an ownership clause that equitably distributes rights arising from collaborative software development projects?"
-                    ]
-                  },
-                  {
-                    "theme": "Data Usage & Privacy – Vendor Use of Anonymized Information",
-                    "representativeQuestion": "How can a company negotiate a data-usage clause that permits a marketing agency to use anonymized campaign data while protecting privacy rights under Texas law?",
-                    "count": 5,
-                    "similarQuestions": [
-                      "What legal considerations apply to allowing third-party marketing agencies to repurpose anonymized customer data collected during a campaign under Texas law?",
-                      "How can you monitor and control a vendor's use of anonymized data to ensure compliance with contractual privacy obligations and state data-protection statutes?"
-                    ]
-                  }
-                ]
-              }
+            const response = await this.model.invoke(prompt);
+            const cleanedResponse = this.cleanJsonResponse(response.content.toString());            
+            return JSON.parse(cleanedResponse);            
         } catch (error) {
             console.error('Error analyzing FAQs:', error);
             throw error;

@@ -42,6 +42,7 @@ const getChartColors = (type: 'pie' | 'bar', dataLength: number): string[] => {
 };
 
 interface LegalAnalysisEmailProps {
+  focus: 'commercial_contracts' | 'privacy';
   topics: {
     name: string;
     themes: string[];
@@ -88,7 +89,7 @@ interface LegalAnalysisEmailProps {
 const previewData: LegalAnalysisEmailProps = {
   topics: [
     {
-      name: "Contract Drafting & Enforceability",
+      name: "Contract Drafting & Enforceability (Sample Topic)",
       themes: ["Formation", "Clarity", "Compliance"],
       frequency: 13,
       exampleTopics: ["Contract Formation", "UCC Applicability"]
@@ -96,7 +97,7 @@ const previewData: LegalAnalysisEmailProps = {
   ],
   faqs: [
     {
-      theme: "Risk Allocation",
+      theme: "Risk Allocation (Sample FAQ)",
       representativeQuestion: "How should a company negotiate a limitation-of-liability clause?",
       count: 17,
       similarQuestions: ["What considerations apply to liability caps?", "How to ensure enforceability?"]
@@ -149,7 +150,8 @@ const previewData: LegalAnalysisEmailProps = {
       },
       title: "Common Legal Questions"
     }
-  ]
+  ],
+  focus: 'commercial_contracts'
 };
 
 export const LegalAnalysisEmail = ({
@@ -157,6 +159,7 @@ export const LegalAnalysisEmail = ({
   faqs = previewData.faqs,
   timeSavings = previewData.timeSavings,
   chartData = previewData.chartData,
+  focus = previewData.focus
 }: Partial<LegalAnalysisEmailProps> = {}) => {
   // Transform chart data with theme
   const themedChartData = chartData.map((chart) => ({
@@ -169,7 +172,7 @@ export const LegalAnalysisEmail = ({
     title: chart.title
   }));
 
-  const previewText = "Analysis Report";
+  const previewText = `Analysis Report: ${focus}`;
   const brandColor = 'rgba(14, 31, 69, 0.9)';
 
   return (
@@ -191,7 +194,7 @@ export const LegalAnalysisEmail = ({
 
             <Section className="mt-[32px]">
               <Heading className="text-[#0E1F45] text-[28px] font-semibold text-center p-0 my-[30px] mx-0">
-                Legal AI Analysis Report
+                Analysis Report: {focus}
               </Heading>
               <Section className="mt-4 mb-8">
                 <Text className="text-gray-600 text-[14px] leading-[22px] text-center">

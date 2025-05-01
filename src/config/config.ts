@@ -1,6 +1,21 @@
+export type AIModel = 'openai' | 'anthropic';
+
+// Anthropic Models
+// claude-3-7-sonnet-20250219
+// claude-3-5-sonnet-20241022
+// claude-3-5-haiku-20241022
+//claude-3-opus-20240229
+
+// OpenAI Models
+// gpt-o3
+// gpt-4.1
+// gpt-4o-mini
+
 export const config = {
     legalFocuses: ['commercial_contracts', 'privacy'] as const,
-    defaultModel: 'o3',
+    defaultModel: 'gpt-4.1',
+    aiModel: 'openai' as AIModel,
+    temperature: 0.7,
     timeSavingsMultiplier: 2.5, // Estimated time saved compared to traditional research
     
     // Legal frameworks by focus

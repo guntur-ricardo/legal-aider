@@ -64,7 +64,7 @@ export class ChatStorage {
             const data = await fs.readFile(filePath, 'utf-8');
             const legalChats = JSON.parse(data);
             const chats = legalChats[focus]?.chats || [];
-            console.log(`Successfully loaded ${chats.length} chats`);
+            console.log(`Loading chats`);
             return chats;
         } catch (error) {
             if ((error as NodeJS.ErrnoException).code === 'ENOENT') {

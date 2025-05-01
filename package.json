@@ -15,7 +15,8 @@
     "archive-chats": "ts-node src/scripts/archiveChats.ts",
     "analyze-chats": "ts-node src/scripts/analyzeAndUpdateChats.ts",
     "test-report": "ts-node src/scripts/testReportGenerator.ts",
-    "generate-email": "ts-node src/scripts/generateEmail.ts"
+    "generate-email": "ts-node src/scripts/generateEmail.ts",
+    "demo": "ts-node src/scripts/demo.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",

@@ -4,49 +4,19 @@ import { Chat, ChatContext, ChatMessage, ChatMetadata } from '../models/Chat';
 import { config } from '../config/config';
 import { v4 as uuidv4 } from 'uuid';
 import { ChatStorage } from '../chatStorage/ChatStorage';
+import { createAIClient } from './AIClient';
 
-/*
- * Sample Chat for reference
- * {
-  id: "chat_123",
-  legalFocus: "commercial_contracts",
-  context: {
-    scenario: "Reviewing a software licensing agreement for a startup",
-    userRole: "in-house counsel",
-    expertiseLevel: "intermediate",
-    jurisdiction: "California"
-  },
-  messages: [
-    {
-      role: "user",
-      content: "What are the key clauses I should look for in this software licensing agreement?",
-      timestamp: "2024-04-26T12:00:00Z",
-      messageType: "question"
-    },
-    {
-      role: "assistant",
-      content: "The most critical clauses to review are: 1) License Grant...",
-      timestamp: "2024-04-26T12:01:00Z",
-      messageType: "answer"
-    }
-  ],
-  metadata: {
-    createdAt: "2024-04-26T12:00:00Z",
-    estimatedDuration: 15,
-    complexity: "medium"
-  }
-}
- */
 export class ChatGenerator {
-    private model: ChatOpenAI;
+    private model: ChatOpenAI | ChatAnthropic;
     private focus: 'commercial_contracts' | 'privacy';
 
     constructor(focus: 'commercial_contracts' | 'privacy') {
-        // Initialize OpenAI model
-        this.model = new ChatOpenAI({
-            modelName: config.defaultModel,
-            temperature: 0.7,
-        });
+        // Initialize AI model based on config
+        this.model = createAIClient(
+            config.aiModel,
+            config.defaultModel,
+            config.temperature
+        );
         this.focus = focus;
     }
 
@@ -156,7 +126,9 @@ export class ChatGenerator {
             metadata: {
                 createdAt: now,
                 chatDuration: 15, // Default 15 minutes for AI consultation
-                complexity: 'medium'
+                complexity: 'medium',
+                topics: [],
+                faqs: []
             },
             timeSavings: {
                 traditionalDuration: 60, // Default 1 hour for traditional methods
